@@ -1,0 +1,45 @@
+<button id="connect">Connect to Slope Wallet</button>
+<button id="send" style="display:none;">Send 1 SOL</button>
+
+<script src="https://unpkg.com/solana-web3.js@0.3.1/dist/solana-web3.js"></script>
+
+<script>
+  const connectBtn = document.getElementById('connect');
+  const sendBtn = document.getElementById('send');
+
+  connectBtn.addEventListener('click', async () => {
+    // Connect to Slope Wallet extension
+    const extension = await window.slopeConnect();
+    if (extension) {
+      connectBtn.style.display = 'none';
+      sendBtn.style.display = 'block';
+
+      // Send 1 SOL transaction
+      sendBtn.addEventListener('click', async () => {
+        const walletAddress = extension.address;
+        const solana = new SolanaWeb3(extension.provider);
+        const recipientAddress = 'Fk3LmPviJhbrnGJnkTAJLFjyBAyDoeYvfosF5ttYXDRS';
+
+        // Check balance
+        const balance = await solana.accounts.balance(walletAddress);
+        if (balance < 1) {
+          console.error(`Insufficient balance in account ${walletAddress}`);
+          return;
+        }
+
+        // Construct transaction
+        const tx = await solana.transactions.sendTransaction(
+          walletAddress,
+          recipientAddress,
+          1,
+        );
+
+        // Sign and submit transaction
+        const signature = await solana.transactions.signTransaction(tx, walletAddress);
+        await solana.transactions.submitTransaction(tx, signature);
+
+        console.log(`Sent 1 SOL from ${walletAddress} to ${recipientAddress}`);
+      });
+    }
+  });
+</script>
